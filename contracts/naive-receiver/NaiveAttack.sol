@@ -1,6 +1,6 @@
 pragma solidity ^0.8.0;
 
-contract AttackContract {
+contract NaiveAttack {
   address private _pool;
   address private _victim;
   constructor(address pool, address victim) public {
