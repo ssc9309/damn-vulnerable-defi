@@ -62,6 +62,9 @@ describe('Compromised challenge', function () {
     it('Exploit', async function () {        
         /** CODE YOUR EXPLOIT HERE */
 
+        // ethers.getSigner("address") acts like I'm the account
+        // I may be able to do the compromised tasks with this. although not exactly doing password stuff.
+
         const leakToPrivateKey = (leak) => {
             const base64 = Buffer.from(leak.split(" ").join(""), "hex").toString("utf8");
             const hexKey = Buffer.from(base64, "base64").toString('utf8');
